@@ -1,21 +1,93 @@
 apply plugin: 'com.android.application'
 
+def getCustomVersionName() {
+    return "1.0"
+}
+
+def buildTime() {
+    return new Date().format("yyyy-MM-dd HH:mm:ss")
+}
+
 android {
-    compileSdkVersion 28
+    compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.ansqun.test"
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0"
+        versionName getCustomVersionName()
+        resValue("string", "app_name", "ANSQUNApp")
+        resValue("string", "build_time", buildTime())
+        flavorDimensions "versionCode"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    signingConfigs {
+        ansqun {
+            storeFile file(System.properties['keyStore'])
+            storePassword System.properties['keyStorePassword']
+//            keyAlias System.properties['keyAlias']
+//            keyPassword System.properties['keyAliasPassword']
+            keyAlias project.property('ansqun.keyAlias')
+            keyPassword project.property('ansqun.keyAliasPassword')
         }
     }
+
+    productFlavors {
+        product1 {
+//            manifestPlaceholders=[CHANNEL_VALUE:"PRODUCT1"]
+        }
+        product2 {
+//            manifestPlaceholders=[CHANNEL_VALUE:"PRODUCT2"]
+        }
+        product3 {
+//            manifestPlaceholders=[CHANNEL_VALUE:"PRODUCT3"]
+        }
+    }
+    productFlavors.all { flavor ->
+        flavor.manifestPlaceholders=[CHANNEL_VALUE: name]
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            if (output.outputFile != null &&
+                output.outputFile.name.endsWith('.apk') &&
+                'release'.equals(variant.buildType.name)) {
+                def apkFile = new File(output.outputFile.getParent(),
+                    "ANSQUNApp_${variant.flavorName}_ver${variant.versionName}.apk")
+//                output.outputFile = apkFile
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            resValue("string", "app_name", "ANSQUNAppRelase")
+            buildConfigField "String", "myname", "\"abx\""
+            buildConfigField "boolean", "testFlag", "true"
+            minifyEnabled false
+//            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        ansqun.initWith(buildTypes.debug)
+        ansqun {
+            resValue("string", "app_name", "ANSQUN")
+            buildConfigField "String", "myname", "\"ANSQUN\""
+            buildConfigField "boolean", "testFlag", "false"
+            signingConfig signingConfigs.ansqun
+            applicationIdSuffix ".ansqun"
+        }
+    }
+}
+
+
+task printProperties << {
+    println project
+    println project.name
+    println project.buildDir
+    println project.buildFile
+    println project.version
+    println name
+    println buildDir
+    println path
 }
 
 dependencies {

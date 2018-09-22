@@ -20,6 +20,14 @@ allprojects {
         google()
         jcenter()
     }
+    ext {
+        compileSdkVersion = 28
+        buildToolsVersion = "27.0.3"
+        minSdkVersion = 23
+        targetSdkVersion = 27
+        versionCode = 3
+        versionName = "1.0.1"
+    }
 }
 
 task clean(type: Delete) {
